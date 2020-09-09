@@ -188,15 +188,17 @@ void ASGameMode::RestartDeadPlayers()
 	}
 }
 
-void ASGameMode::OnActorKill(AActor* VictimActor, AActor* KillerActor, AController* KillerController)
+void ASGameMode::OnActorKill(AActor* VictimActor, AActor* DefeatActor, AController* VictimController)
 {
-	ASCharacter* Character = Cast<ASCharacter>(KillerActor);
+	ASCharacter* WinCharacter = Cast<ASCharacter>(VictimActor);
+	ASCharacter* DefectCharacter = Cast<ASCharacter>(DefeatActor);
+
 	ASGameState* GS = GetGameState<ASGameState>();
 
 
-	if (Character != nullptr && GS != nullptr)
+	if (WinCharacter != nullptr && GS != nullptr)
 	{
-		if (Character->GetTeamNumber() == 0)
+		if (WinCharacter->GetTeamNumber() == 0)
 		{
 			int Score = GS->GetTeam1KillScore();
 			GS->SetTeam1KillScore(Score + 1);
@@ -207,10 +209,10 @@ void ASGameMode::OnActorKill(AActor* VictimActor, AActor* KillerActor, AControll
 			GS->SetTeam2KillScore(Score + 1);
 		}
 
-		if (!Character->bAi)
-			SpawnPlayer(Character);
+		if (!DefectCharacter->bAi)
+			SpawnPlayer(DefectCharacter);
 		else
-			SpawnNewBot(GetTeamName(Character->GetTeamNumber()));
+			SpawnNewBot(GetTeamName(DefectCharacter->GetTeamNumber()));
 	}
 }
 

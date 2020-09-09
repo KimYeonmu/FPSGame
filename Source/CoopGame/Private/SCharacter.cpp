@@ -303,7 +303,7 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 
 		if (GM)
 		{
-			GM->OnActorKilled.Broadcast(this, DamageCauser, InstigatedBy);
+			GM->OnActorKilled.Broadcast(DamageCauser, this, InstigatedBy);
 		}
 
 		GetMovementComponent()->StopMovementImmediately();
