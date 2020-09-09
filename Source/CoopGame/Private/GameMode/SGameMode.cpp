@@ -57,10 +57,10 @@ void ASGameMode::SpawnPlayer(ASCharacter* Character)
 
 void ASGameMode::StartWave()
 {
-	// SpawnNewBot("Team2");
-	// SpawnNewBot("Team2");
-	// SpawnNewBot("Team2");
-	// SpawnNewBot("Team2");
+	SpawnNewBot("Team2");
+	SpawnNewBot("Team2");
+	SpawnNewBot("Team2");
+	SpawnNewBot("Team2");
 
 	// WaveCount++;
 	// NrOfBotsToSpawn = 2 * WaveCount;
