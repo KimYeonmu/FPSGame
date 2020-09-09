@@ -9,6 +9,7 @@
 #include "SHealthComponent.h"
 #include "SCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Net/UnrealNetwork.h"
 
 void ASProjectileWeapon::Fire()
 {
@@ -41,6 +42,12 @@ void ASProjectileWeapon::Fire()
 			BulletCount -= 1;
 
 			PlayFireEffect(MuzzleLocation);
+
+			if (HasAuthority())
+			{
+				SpawnProjectileData.SpawnPosition = MuzzleLocation;
+				SpawnProjectileData.SpawnRotate = MuzzleRotation;
+			}
 		}
 	}
 }
@@ -79,6 +86,7 @@ void ASProjectileWeapon::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherA
 
 		if (HasAuthority())
 		{
+			
 			HitScanTrace.TraceTo = Hit.ImpactPoint;
 			HitScanTrace.SurfaceType = SurfaceType;
 		}
@@ -86,4 +94,16 @@ void ASProjectileWeapon::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherA
 
 	AActor* HitOwner = HitComponent->GetOwner();
 	UGameplayStatics::ApplyDamage(HitOwner, 101, HitOwner->GetInstigatorController(), HitOwner, nullptr);
+}
+
+void ASProjectileWeapon::OnReq_SpawnProjectileData()
+{
+	PlayFireEffect(SpawnProjectileData.SpawnPosition);
+}
+
+void ASProjectileWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASProjectileWeapon, SpawnProjectileData, COND_SkipOwner);
 }

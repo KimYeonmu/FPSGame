@@ -6,9 +6,20 @@
 #include "SWeapon.h"
 #include "SProjectileWeapon.generated.h"
 
-/**
- * 
- */
+USTRUCT()
+struct FProjectileSpawnData
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY()
+	FVector_NetQuantize SpawnPosition;
+
+	UPROPERTY()
+	FRotator SpawnRotate;
+};
+
 UCLASS()
 class COOPGAME_API ASProjectileWeapon : public ASWeapon
 {
@@ -26,7 +37,15 @@ protected:
 		AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse,
 		const FHitResult& Hit);
 
+	UFUNCTION()
+	void OnReq_SpawnProjectileData();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="ProjectileWeapon")
 	TSubclassOf<AActor> ProjectileClass;
+
+	UPROPERTY(ReplicatedUsing= OnReq_SpawnProjectileData)
+	FProjectileSpawnData SpawnProjectileData;
+
+	
 };
