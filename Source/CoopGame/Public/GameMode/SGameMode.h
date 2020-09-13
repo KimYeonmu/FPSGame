@@ -6,7 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "SGameMode.generated.h"
 
-enum class EWaveState : uint8;
+enum class EInGameState : uint8;
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, DefeatActor, AController*, VictimController);
@@ -33,19 +33,9 @@ protected:
 
 	void StartWave();
 
-	void EndWave();
-
-	void PrepareForNextWave();
-
-	void SpawnBotTimerElapsed();
-
-	void CheckWaveState();
-
 	void CheckAnyPlayerAlive();
 
-	void GameOver();
-
-	void SetWaveState(EWaveState NewState);
+	void SetWaveState(EInGameState NewState);
 
 	void RestartDeadPlayers();
 
@@ -57,22 +47,11 @@ public:
 
 	virtual void Tick(float DeltaSeconds);
 
-	
-
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="GameMode")
 	TSubclassOf<ASCharacter> BotCharacter;
 
 	FTimerHandle TimerHandle_BotSpawner;
-
-	FTimerHandle TimerHandle_NextWaveStart;
-
-	int32 NrOfBotsToSpawn;
-
-	int32 WaveCount;
-
-	UPROPERTY(EditDefaultsOnly, Category="GameMode")
-	float TimeBetweenWaves;
 
 protected:
 	TArray<AActor*> PlayerStartArray;

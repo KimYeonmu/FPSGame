@@ -12,8 +12,6 @@
 
 ASGameMode::ASGameMode()
 {
-	TimeBetweenWaves = 2;
-
 	GameStateClass = ASGameState::StaticClass();
 	PlayerStateClass = ASPlayerState::StaticClass();
 
@@ -36,7 +34,7 @@ void ASGameMode::SpawnPlayer(ASCharacter* Character)
 {
 	FString TeamName = GetTeamName(Character->GetTeamNumber());
 	AActor* RandomStartActor = GetRandomPlayerStart(TeamName);
-	
+
 	if (RandomStartActor != nullptr)
 	{
 		FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this,
@@ -51,7 +49,6 @@ void ASGameMode::SpawnPlayer(ASCharacter* Character)
 		//RestartPlayer(PS);
 		//RestartDeadPlayers();
 		GetWorldTimerManager().SetTimer(SpawnTimer, RespawnDelegate, 5, false);
-
 	}
 }
 
@@ -61,76 +58,6 @@ void ASGameMode::StartWave()
 	SpawnNewBot("Team2");
 	SpawnNewBot("Team2");
 	SpawnNewBot("Team2");
-
-	// WaveCount++;
-	// NrOfBotsToSpawn = 2 * WaveCount;
-	// GetWorldTimerManager().SetTimer(TimerHandle_BotSpawner, this, &ASGameMode::SpawnBotTimerElapsed, 1, true, 0.0f);
-
-	SetWaveState(EWaveState::WaveInProgress);
-}
-
-void ASGameMode::EndWave()
-{
-	GetWorldTimerManager().ClearTimer(TimerHandle_BotSpawner);
-
-	SetWaveState(EWaveState::WaitingToComplete);
-}
-
-void ASGameMode::PrepareForNextWave()
-{
-	GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &ASGameMode::StartWave, TimeBetweenWaves, false);
-
-	SetWaveState(EWaveState::WaitingToStart);
-
-	RestartDeadPlayers();
-}
-
-void ASGameMode::SpawnBotTimerElapsed()
-{
-	// SpawnNewBot();
-
-	NrOfBotsToSpawn--;
-	
-	if (NrOfBotsToSpawn <= 0)
-	{
-		EndWave();
-	}
-}
-
-void ASGameMode::CheckWaveState()
-{
-	bool bIsPreparingForWave = GetWorldTimerManager().IsTimerActive(TimerHandle_NextWaveStart);
-
-	if (NrOfBotsToSpawn > 0 || bIsPreparingForWave)
-	{
-		return;
-	}
-
-	bool bIsAnyBotAlive = false;
-
-	for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
-	{
-		APawn* TestPawn = It->Get();
-
-		if (TestPawn == nullptr || TestPawn->IsPlayerControlled())
-		{
-			continue;
-		}
-
-		USHealthComponent* HealthComp = Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
-
-		if (HealthComp && HealthComp->GetHealth() > 0.0f)
-		{
-			bIsAnyBotAlive = true; 
-			break;
-		}
-	}
-		
-	if (!bIsAnyBotAlive)
-	{
-		SetWaveState(EWaveState::WaveComplete);
-		PrepareForNextWave();
-	}
 }
 
 void ASGameMode::CheckAnyPlayerAlive()
@@ -152,19 +79,9 @@ void ASGameMode::CheckAnyPlayerAlive()
 			}
 		}
 	}
-	
-	GameOver();
 }
 
-void ASGameMode::GameOver()
-{
-	EndWave();
-
-	SetWaveState(EWaveState::GameOver);
-	UE_LOG(LogTemp, Log, TEXT("Player Die"));
-}
-
-void ASGameMode::SetWaveState(EWaveState NewState)
+void ASGameMode::SetWaveState(EInGameState NewState)
 {
 	ASGameState* GS = GetGameState<ASGameState>();
 
@@ -180,7 +97,7 @@ void ASGameMode::RestartDeadPlayers()
 		It; ++It)
 	{
 		APlayerController* PC = It->Get();
-		
+
 		if (PC && PC->GetPawn() == nullptr)
 		{
 			RestartPlayer(PC);
@@ -209,10 +126,21 @@ void ASGameMode::OnActorKill(AActor* VictimActor, AActor* DefeatActor, AControll
 			GS->SetTeam2KillScore(Score + 1);
 		}
 
+		if (GS->IsFinishGame())
+		{
+			SetWaveState(EInGameState::End);
+			return;
+		}
+
 		if (!DefectCharacter->bAi)
+		{
 			SpawnPlayer(DefectCharacter);
+		}
+		
 		else
+		{
 			SpawnNewBot(GetTeamName(DefectCharacter->GetTeamNumber()));
+		}
 	}
 }
 
@@ -220,21 +148,19 @@ void ASGameMode::StartPlay()
 {
 	Super::StartPlay();
 
-	PrepareForNextWave();
-
 	OnActorKilled.AddDynamic(this, &ASGameMode::OnActorKill);
 
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), 
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(),
 		APlayerStart::StaticClass(),
 		PlayerStartArray);
+
+	SetWaveState(EInGameState::Start);
+	StartWave();
 }
 
 void ASGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	// CheckWaveState();
-	// CheckAnyPlayerAlive();
 }
 
 TArray<AActor*> ASGameMode::GetPlayerStartArray(const FString& TeamName)
@@ -265,7 +191,7 @@ AActor* ASGameMode::GetRandomPlayerStart(const FString& TeamName)
 		float random = (int)FMath::RandRange(0, TeamArray.Num() - 1);
 		RandomStartActor = TeamArray[random];
 	}
-	
+
 	return RandomStartActor;
 }
 
@@ -275,7 +201,7 @@ FString ASGameMode::GetTeamName(uint8 TeamNumber)
 	{
 		return FString("Team1");
 	}
-	
+
 	return FString("Team2");
 }
 

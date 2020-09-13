@@ -6,19 +6,20 @@
 
 ASGameState::ASGameState()
 {
-	MaxKillScore = 50;
+	MaxKillScore = 5;
 }
 
-void ASGameState::OnReq_WaveState(EWaveState OldState)
+void ASGameState::OnReq_WaveState(EInGameState OldState)
 {
 	WaveStateChanged(WaveState, OldState);
+	OnChangeGameState.Broadcast();
 }
 
-void ASGameState::SetWaveState(EWaveState NewState)
+void ASGameState::SetWaveState(EInGameState NewState)
 {
 	if (HasAuthority())
 	{
-		EWaveState OldState = WaveState;
+		EInGameState OldState = WaveState;
 
 		WaveState = NewState;
 
@@ -41,6 +42,14 @@ int ASGameState::GetMaxKillScore()
 	return MaxKillScore;
 }
 
+int ASGameState::GetWinTeamNumber()
+{
+	if (Team1KillScore >= MaxKillScore)
+		return 0;
+
+	return 255;
+}
+
 void ASGameState::SetTeam1KillScore(int Score)
 {
 	Team1KillScore = Score;
@@ -49,6 +58,12 @@ void ASGameState::SetTeam1KillScore(int Score)
 void ASGameState::SetTeam2KillScore(int Score)
 {
 	Team2KillScore = Score;
+}
+
+bool ASGameState::IsFinishGame()
+{
+	return Team1KillScore >= MaxKillScore ||
+		Team2KillScore >= MaxKillScore;
 }
 
 void ASGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

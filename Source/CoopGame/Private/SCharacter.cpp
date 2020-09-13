@@ -16,6 +16,8 @@
 #include "Components/PostProcessComponent.h"
 #include "GameMode/SGameMode.h"
 #include "Ui/InGameBottomUserWidget.h"
+#include "SGameState.h"
+#include "Ui/ResultUserWidget.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -75,6 +77,18 @@ void ASCharacter::BeginPlay()
 			IngameBottomUserWidget->SetMaxHp(100);
 			IngameBottomUserWidget->AddToViewport();
 		}
+
+		if (ResultWidgetClass != nullptr)
+		{
+			UUserWidget* Widget = CreateWidget(GetWorld(), ResultWidgetClass);
+			ResultUserWidget = Cast<UResultUserWidget>(Widget);
+			ResultUserWidget->SetVisibility(ESlateVisibility::Hidden);
+			ResultUserWidget->AddToViewport();
+		}
+		
+
+		ASGameState* GS = GetWorld()->GetGameState<ASGameState>();
+		GS->OnChangeGameState.AddDynamic(this, &ASCharacter::FinishGame);
 	}
 
 	if (GetLocalRole() == ROLE_Authority)
@@ -290,6 +304,19 @@ void ASCharacter::FinishReload(int RemoveBulletCount)
 {
 	bReload = false;
 	SaveBulletCount -= RemoveBulletCount;
+}
+
+void ASCharacter::FinishGame()
+{
+	if (ResultUserWidget != nullptr)
+	{
+		ASGameState* InGameState = GetWorld()->GetGameState<ASGameState>();
+
+		bool IsWin = InGameState->GetWinTeamNumber() == GetTeamNumber();
+		ResultUserWidget->SetResult(IsWin);
+
+		ResultUserWidget->SetVisibility(ESlateVisibility::Visible);
+	}
 }
 
 void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType,

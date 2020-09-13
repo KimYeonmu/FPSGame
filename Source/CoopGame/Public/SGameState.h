@@ -7,14 +7,13 @@
 #include "SGameState.generated.h"
 
 UENUM(BlueprintType)
-enum class EWaveState : uint8
+enum class EInGameState : uint8
 {
-	WaitingToStart,
-	WaveInProgress,
-	WaitingToComplete,
-	WaveComplete,
-	GameOver,
+	Start,
+	End
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FChangeGameState);
 
 /**
  * 
@@ -28,13 +27,13 @@ class COOPGAME_API ASGameState : public AGameStateBase
 
 protected:
 	UFUNCTION()
-	void OnReq_WaveState(EWaveState OldState);
+	void OnReq_WaveState(EInGameState OldState);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="GameState")
-	void WaveStateChanged(EWaveState NewState, EWaveState OldState);
+	void WaveStateChanged(EInGameState NewState, EInGameState OldState);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnReq_WaveState, Category = "GameState")
-	EWaveState WaveState;
+	EInGameState WaveState;
 
 	UPROPERTY(Replicated)
 	int32 Team1KillScore;
@@ -45,8 +44,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="GameState")
 	int32 MaxKillScore;
 
+	
 public:
-	void SetWaveState(EWaveState NewState);
+	void SetWaveState(EInGameState NewState);
 
 	UFUNCTION()
 	int GetTeam1KillScore();
@@ -58,10 +58,16 @@ public:
 	int GetMaxKillScore();
 
 	UFUNCTION()
+	int GetWinTeamNumber();
+	
+	UFUNCTION()
 	void SetTeam1KillScore(int Score);
 
 	UFUNCTION()
 	void SetTeam2KillScore(int Score);
 
+	UFUNCTION()
+	bool IsFinishGame();
 
+	FChangeGameState OnChangeGameState;
 };

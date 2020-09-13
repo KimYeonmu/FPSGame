@@ -14,6 +14,7 @@ class USHealthComponent;
 class UUserWidget;
 class UPostProcessComponent;
 class UInGameBottomUserWidget;
+class UResultUserWidget;
 
 UCLASS()
 class COOPGAME_API ASCharacter : public ACharacter
@@ -108,6 +109,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Player")
 	TSubclassOf<UUserWidget> IngameBottomUserWidgetClass;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	TSubclassOf<UUserWidget> ResultWidgetClass;
+
 	UPROPERTY(Replicated, BlueprintReadOnly, Category="Player")
 	bool bDied;
 
@@ -166,4 +170,12 @@ protected:
 
 	UFUNCTION()
 	void FinishReload(int RemoveBulletCount);
+
+protected:
+	UPROPERTY()
+	UResultUserWidget* ResultUserWidget;
+
+protected:
+	UFUNCTION()
+	void FinishGame();
 };
