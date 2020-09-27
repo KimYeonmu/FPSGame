@@ -25,7 +25,6 @@ public:
 		bool bIsLAN, bool bIsPresence, int32 MaxNumPlayers); 
 
 	FOnCreateSessionCompleteDelegate OnCreateSessionCompleteDelegate;
-
 	FOnStartSessionCompleteDelegate OnStartSessionCompleteDelegate;
 
 	FDelegateHandle OnCreateSessionCompleteDelegateHandle;

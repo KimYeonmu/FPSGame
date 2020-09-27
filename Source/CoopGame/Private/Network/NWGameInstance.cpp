@@ -36,7 +36,7 @@ bool UNWGameInstance::HostSession(FUniqueNetIdRepl UserId, FName SessionName, bo
 	if (OnlineSub)
 	{
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-
+		
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
 			SessionSettings = MakeShareable(new FOnlineSessionSettings());
@@ -104,7 +104,7 @@ void UNWGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSucc
 
 	if (bWasSuccessful)
 	{
-		UGameplayStatics::OpenLevel(GetWorld(), "P_TestMap", true, "listen");
+		UGameplayStatics::OpenLevel(GetWorld(), "Meadow_Environment_Set_Map", false, "listen");
 	}
 }
 

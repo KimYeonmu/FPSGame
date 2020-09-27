@@ -24,7 +24,11 @@ void ULoginUserWidget::NativeConstruct()
 	}
 	
 	UNWGameInstance* instance = UNWGameInstance::GetInstance();
-	instance->OnFindSessionsCompleteDelegate.BindUFunction(this,FName("OnCompleteFindSession"));
+
+	if (instance != nullptr)
+	{
+		instance->OnFindSessionsCompleteDelegate.BindUFunction(this, FName("OnCompleteFindSession"));
+	}
 }
 
 void ULoginUserWidget::OnClickCreateButton()
@@ -35,8 +39,6 @@ void ULoginUserWidget::OnClickCreateButton()
 
 	ULocalPlayer* const Player = instance->GetFirstGamePlayer();
 	instance->HostSession(Player->GetPreferredUniqueNetId(), FName("Room1"), true, true, 4);
-
-	// UGameplayStatics::OpenLevel(this, NextLevelName);
 }
 
 void ULoginUserWidget::OnClickPlayButton()

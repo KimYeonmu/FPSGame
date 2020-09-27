@@ -19,6 +19,10 @@ class COOPGAME_API ASLoginGameModeBase : public AGameModeBase
 protected:
 	virtual void BeginPlay() override;
 
+	virtual TSubclassOf<AGameSession> GetGameSessionClass() const override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Login")
 	TSubclassOf<UUserWidget> LoginWidgetClass;
+
+
 };
