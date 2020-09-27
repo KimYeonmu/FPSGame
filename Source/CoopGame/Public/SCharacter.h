@@ -15,6 +15,8 @@ class UUserWidget;
 class UPostProcessComponent;
 class UInGameBottomUserWidget;
 class UResultUserWidget;
+class USoundCue;
+class UAudioComponent;
 
 UCLASS()
 class COOPGAME_API ASCharacter : public ACharacter
@@ -41,6 +43,12 @@ protected:
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	UPROPERTY(EditDefaultsOnly, Category="Player")
+	USoundCue* WalkSound;
+
+	UPROPERTY()
+	UAudioComponent* WalkSoundComponent;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")

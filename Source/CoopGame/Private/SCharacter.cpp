@@ -42,6 +42,9 @@ ASCharacter::ASCharacter()
 	PostProcessComp = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcessComp"));
 	PostProcessComp->SetupAttachment(RootComponent);
 
+	WalkSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AduioComp"));
+	WalkSoundComponent->SetupAttachment(RootComponent);
+
 	ZoomedFOV = 100;
 	ZoomInterpSpeed = 20;
 	SaveBulletCount = 120;
@@ -61,6 +64,8 @@ void ASCharacter::BeginPlay()
 
 	DefaultFOV = CameraComp->FieldOfView;
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
+
+	WalkSoundComponent->SetSound(WalkSound);
 
 	if (IsLocallyControlled())
 	{
@@ -333,6 +338,8 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 			GM->OnActorKilled.Broadcast(DamageCauser, this, InstigatedBy);
 		}
 
+		WalkSoundComponent->SetActive(false);
+
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -364,6 +371,27 @@ void ASCharacter::Tick(float DeltaTime)
 		{
 			IngameBottomUserWidget->SetBulletText(CurrentWeapon->GetBulletCount());
 			IngameBottomUserWidget->SetSaveBulletText(SaveBulletCount);
+		}
+	}
+
+
+	if (!WalkSoundComponent->IsPlaying())
+	{
+		FVector Speed = GetVelocity();
+
+		if (Speed.X >= 1 || Speed.Y >= 1 || Speed.Z >= 1)
+		{
+			WalkSoundComponent->SetWorldLocation(GetActorLocation());
+			WalkSoundComponent->Play();
+		}
+	}
+	else
+	{
+		FVector Speed = GetVelocity();
+
+		if (Speed.X < 1 && Speed.Y < 1 && Speed.Z < 1)
+		{
+			WalkSoundComponent->Stop();
 		}
 	}
 }
