@@ -2,9 +2,14 @@
 
 #pragma once
 
+
+
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "SGameState.h"
 #include "SCharacter.generated.h"
+
+enum class EInGameState : uint8;
 
 class ASWeapon;
 class AArrowActor;
@@ -17,6 +22,7 @@ class UInGameBottomUserWidget;
 class UResultUserWidget;
 class USoundCue;
 class UAudioComponent;
+class UKillUserWidget;
 
 UCLASS()
 class COOPGAME_API ASCharacter : public ACharacter
@@ -30,6 +36,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void Destroyed() override;
 
 	void MoveForward(float Value);
 
@@ -120,9 +128,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<UUserWidget> ResultWidgetClass;
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category="Player")
-	bool bDied;
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -142,6 +147,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Player")
 	bool bAi;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
+	bool bDied;
 
 public:
 	void SetTimerOutsideMagneticField(float Damage);
@@ -183,7 +191,10 @@ protected:
 	UPROPERTY()
 	UResultUserWidget* ResultUserWidget;
 
+	UPROPERTY()
+	UKillUserWidget* KillUserWidget;
+
 protected:
 	UFUNCTION()
-	void FinishGame();
+	void FinishGame(EInGameState State);
 };

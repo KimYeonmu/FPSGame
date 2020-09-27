@@ -25,6 +25,9 @@ protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	UPROPERTY(EditAnywhere, Category="Widget")
+	UTextBlock* MaxKillTextBlock;
+
+	UPROPERTY(EditAnywhere, Category="Widget")
 	UTextBlock* Team1KillTextBlock;
 
 	UPROPERTY(EditAnywhere, Category = "Widget")

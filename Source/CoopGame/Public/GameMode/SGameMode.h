@@ -47,6 +47,10 @@ public:
 
 	virtual void Tick(float DeltaSeconds);
 
+	FString GetTeamName(uint8 TeamNumber);
+
+	AActor* GetRandomPlayerStart(const FString& TeamName);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="GameMode")
 	TSubclassOf<ASCharacter> BotCharacter;
@@ -57,10 +61,7 @@ protected:
 	TArray<AActor*> PlayerStartArray;
 
 	TArray<AActor*> GetPlayerStartArray(const FString& TeamName);
-
-	AActor* GetRandomPlayerStart(const FString& TeamName);
-
-	FString GetTeamName(uint8 TeamNumber);
+	
 
 public:
 	FOnActorKilled OnActorKilled;

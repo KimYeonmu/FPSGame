@@ -12,6 +12,9 @@ void UKillUserWidget::NativeConstruct()
 
 	GS = GetWorld()->GetGameState<ASGameState>();
 
+	MaxKillTextBlock = Cast<UTextBlock>(GetWidgetFromName(TEXT("MaxKillText")));
+	MaxKillTextBlock->SetText(FText::FromString(FString::FromInt(GS->GetMaxKillScore())));
+		
 	Team1KillTextBlock = Cast<UTextBlock>(GetWidgetFromName(TEXT("Team1Text")));
 	Team2KillTextBlock = Cast<UTextBlock>(GetWidgetFromName(TEXT("Team2Text")));
 

@@ -13,7 +13,7 @@ enum class EInGameState : uint8
 	End
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FChangeGameState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FChangeGameState, EInGameState, State);
 
 /**
  * 

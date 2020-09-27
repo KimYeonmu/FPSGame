@@ -18,6 +18,9 @@
 #include "Ui/InGameBottomUserWidget.h"
 #include "SGameState.h"
 #include "Ui/ResultUserWidget.h"
+#include "Sound/SoundCue.h"
+#include "Components/AudioComponent.h"
+#include "Ui/KillUserWidget.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -36,6 +39,8 @@ ASCharacter::ASCharacter()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
+	HealthComp->SetIsReplicated(true);
+
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
@@ -72,7 +77,8 @@ void ASCharacter::BeginPlay()
 		if (KillScoreUserWidgetClass != nullptr)
 		{
 			UUserWidget* KillWidget = CreateWidget(GetWorld(), KillScoreUserWidgetClass);
-			KillWidget->AddToViewport();
+			KillUserWidget = Cast<UKillUserWidget>(KillWidget);
+			KillUserWidget->AddToViewport();
 		}
 
 		if (IngameBottomUserWidgetClass != nullptr)
@@ -90,7 +96,7 @@ void ASCharacter::BeginPlay()
 			ResultUserWidget->SetVisibility(ESlateVisibility::Hidden);
 			ResultUserWidget->AddToViewport();
 		}
-		
+
 
 		ASGameState* GS = GetWorld()->GetGameState<ASGameState>();
 		GS->OnChangeGameState.AddDynamic(this, &ASCharacter::FinishGame);
@@ -109,6 +115,38 @@ void ASCharacter::BeginPlay()
 			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponAttackSocketName);
 			CurrentWeapon->OnFinishReload.AddDynamic(this, &ASCharacter::FinishReload);
 		}
+
+		ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
+		FString TeamName = GM->GetTeamName(GetTeamNumber());
+		AActor* StartActor = GM->GetRandomPlayerStart(TeamName);
+		FVector StartLocation = StartActor->GetActorLocation();
+		StartLocation.X += FMath::RandRange(-1,1);
+		SetActorLocation(StartActor->GetActorLocation());
+	}
+}
+
+void ASCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	if (KillUserWidget != nullptr)
+	{
+		KillUserWidget->RemoveFromViewport();
+	}
+
+	if (IngameBottomUserWidget != nullptr)
+	{
+		IngameBottomUserWidget->RemoveFromViewport();
+	}
+
+	if (ResultUserWidget != nullptr)
+	{
+		ResultUserWidget->RemoveFromViewport();
+	}
+
+	if (CurrentWeapon != nullptr)
+	{
+		CurrentWeapon->Destroy();
 	}
 }
 
@@ -250,16 +288,16 @@ uint8 ASCharacter::GetTeamNumber()
 
 void ASCharacter::SetTimerOutsideMagneticField(float Damage)
 {
+	GetWorldTimerManager().SetTimer(TimerHandle_InsideMagneticField,
+		this,
+		&ASCharacter::OnOutsideMagnaticField,
+		1,
+		true);
+
+	MagnaticFieldDamage = Damage;
+
 	if (IsLocallyControlled())
 	{
-		GetWorldTimerManager().SetTimer(TimerHandle_InsideMagneticField,
-			this,
-			&ASCharacter::OnOutsideMagnaticField,
-			1,
-			true);
-
-		MagnaticFieldDamage = Damage;
-
 		PostProcessComp->bEnabled = true;
 	}
 }
@@ -311,22 +349,30 @@ void ASCharacter::FinishReload(int RemoveBulletCount)
 	SaveBulletCount -= RemoveBulletCount;
 }
 
-void ASCharacter::FinishGame()
+void ASCharacter::FinishGame(EInGameState State)
 {
-	if (ResultUserWidget != nullptr)
+	if (State == EInGameState::End)
 	{
-		ASGameState* InGameState = GetWorld()->GetGameState<ASGameState>();
+		if (ResultUserWidget != nullptr)
+		{
+			ASGameState* InGameState = GetWorld()->GetGameState<ASGameState>();
 
-		bool IsWin = InGameState->GetWinTeamNumber() == GetTeamNumber();
-		ResultUserWidget->SetResult(IsWin);
+			bool IsWin = InGameState->GetWinTeamNumber() == GetTeamNumber();
+			ResultUserWidget->SetResult(IsWin);
 
-		ResultUserWidget->SetVisibility(ESlateVisibility::Visible);
+			ResultUserWidget->SetVisibility(ESlateVisibility::Visible);
+		}
 	}
 }
 
 void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType,
 	class AController* InstigatedBy, AActor* DamageCauser)
 {
+	if (!bAi && IsLocallyControlled())
+	{
+		IngameBottomUserWidget->SetHp(Health);
+	}
+
 	if (Health <= 0.0f && !bDied)
 	{
 		bDied = true;
@@ -344,12 +390,7 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
-		SetLifeSpan(10.0f);
-	}
-
-	if (!bAi && IsLocallyControlled())
-	{
-		IngameBottomUserWidget->SetHp(Health);
+		SetLifeSpan(3);
 	}
 }
 
@@ -427,7 +468,7 @@ FVector ASCharacter::GetPawnViewLocation() const
 	{
 		return CameraComp->GetComponentLocation();
 	}
-	
+
 	return Super::GetPawnViewLocation();
 }
 

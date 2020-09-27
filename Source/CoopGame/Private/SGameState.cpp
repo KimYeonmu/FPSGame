@@ -12,19 +12,12 @@ ASGameState::ASGameState()
 void ASGameState::OnReq_WaveState(EInGameState OldState)
 {
 	WaveStateChanged(WaveState, OldState);
-	OnChangeGameState.Broadcast();
+	OnChangeGameState.Broadcast(WaveState);
 }
 
 void ASGameState::SetWaveState(EInGameState NewState)
 {
-	if (HasAuthority())
-	{
-		EInGameState OldState = WaveState;
-
-		WaveState = NewState;
-
-		OnReq_WaveState(OldState);
-	}
+	WaveState = NewState;
 }
 
 int ASGameState::GetTeam1KillScore()

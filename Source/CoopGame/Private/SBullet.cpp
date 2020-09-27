@@ -21,7 +21,8 @@ ASBullet::ASBullet()
 	ProjectileMovementComp->MaxSpeed = 2000;
 	
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
-	
+	HealthComp->SetIsReplicated(true);
+
 	CapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp"));
 	SetRootComponent(CapsuleComp);
 	

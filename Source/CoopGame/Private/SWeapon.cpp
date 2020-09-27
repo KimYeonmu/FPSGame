@@ -15,6 +15,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
 #include "Sound/SoundCue.h"
+#include "SCharacter.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(
@@ -58,7 +59,7 @@ void ASWeapon::BeginPlay()
 
 void ASWeapon::Fire()
 {
-	AActor* MyOwner = GetOwner();
+	ASCharacter* MyOwner = Cast<ASCharacter>(GetOwner());
 
 	if (GetLocalRole() < ROLE_Authority)
 	{
@@ -66,7 +67,7 @@ void ASWeapon::Fire()
 		ServerFire();
 	}
 
-	if (MyOwner)
+	if (MyOwner != nullptr && !MyOwner->bDied)
 	{
 		FVector EyeLocation;
 		FRotator EyeRotation;
@@ -141,7 +142,9 @@ bool ASWeapon::ServerFire_Validate()
 
 void ASWeapon::StartFire()
 {
-	if (BulletCount > 0)
+	ASCharacter* OwnerCharacter = Cast<ASCharacter>(GetOwner());
+
+	if (BulletCount > 0 || OwnerCharacter->bAi)
 	{
 		float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
 
@@ -201,7 +204,7 @@ void ASWeapon::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoi
 		SelectedEffect = FleshImpactEffect;
 		break;
 	default:
-		SelectedEffect = DefaultImpactEffect;
+		//SelectedEffect = DefaultImpactEffect;
 		break;
 	}
 

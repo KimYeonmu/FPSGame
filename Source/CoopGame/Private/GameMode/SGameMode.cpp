@@ -26,6 +26,7 @@ void ASGameMode::SpawnNewBot(const FString& TeamName)
 	FVector Position = RandomStartActor->GetActorLocation();
 	FRotator Rotator = RandomStartActor->GetActorRotation();
 
+	Position.X += FMath::RandRange(-10, 10);
 	GetWorld()->SpawnActor(BotCharacter, &Position, &Rotator);
 }
 
@@ -112,18 +113,20 @@ void ASGameMode::OnActorKill(AActor* VictimActor, AActor* DefeatActor, AControll
 
 	ASGameState* GS = GetGameState<ASGameState>();
 
-
 	if (WinCharacter != nullptr && GS != nullptr)
 	{
-		if (WinCharacter->GetTeamNumber() == 0)
+		if (VictimActor != DefeatActor)
 		{
-			int Score = GS->GetTeam1KillScore();
-			GS->SetTeam1KillScore(Score + 1);
-		}
-		else
-		{
-			int Score = GS->GetTeam2KillScore();
-			GS->SetTeam2KillScore(Score + 1);
+			if (WinCharacter->GetTeamNumber() == 0)
+			{
+				int Score = GS->GetTeam1KillScore();
+				GS->SetTeam1KillScore(Score + 1);
+			}
+			else
+			{
+				int Score = GS->GetTeam2KillScore();
+				GS->SetTeam2KillScore(Score + 1);
+			}
 		}
 
 		if (GS->IsFinishGame())
@@ -146,13 +149,13 @@ void ASGameMode::OnActorKill(AActor* VictimActor, AActor* DefeatActor, AControll
 
 void ASGameMode::StartPlay()
 {
-	Super::StartPlay();
-
-	OnActorKilled.AddDynamic(this, &ASGameMode::OnActorKill);
-
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(),
 		APlayerStart::StaticClass(),
 		PlayerStartArray);
+
+	Super::StartPlay();
+
+	OnActorKilled.AddDynamic(this, &ASGameMode::OnActorKill);
 
 	SetWaveState(EInGameState::Start);
 	StartWave();
